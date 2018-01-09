@@ -68,9 +68,12 @@ app.post('/api/albums/:id/songs', function(req, res){
   console.log('got to create a song');
   db.Album.findById(req.params.id, function(err, album){
     if(err){return console.log('there has been an error:',err);}
-        db.Song.create(req.body);
+        db.Song.create(req.body, function(err, song){
+          album.songs.push(song);
+          album.save(function(err, album){
+          });
+        });
   });
-  console.log("we're done with finding Albums");
   res.json(req.body);
 });
 

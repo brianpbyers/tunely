@@ -53,7 +53,7 @@ $(document).ready(function() {
     var id= $(this).parents('.album').data('album-id');
     $('#songModal').data('album-id', id).modal();
 
-    $('#saveSong').click(function(event){
+    $('#saveSong').one('click',function(event){
       event.preventDefault();
       console.log('tried to submit a new song!');
       let newSong = {
@@ -64,6 +64,9 @@ $(document).ready(function() {
       $.post('/api/albums/' + $('#songModal').data('album-id') + '/songs', newSong, function(song){
         console.log('listRef.html:',$(listRef).html());
         $(listRef).html($(listRef).html() + " (" + song.trackNumber + ") " + song.name + " -");
+        $('#trackNumber').val('');
+        $('#songName').val('');
+        $('#songModal').modal('hide');
       });
     });
     console.log('id',id);
@@ -126,9 +129,9 @@ function renderAlbum(album) {
   "                      </li>" +
   buildSongsHTML(album.songs, album._id) +
   "                    </ul>" +
-    "                <div class='panel-footer'>" +
+  "                 <div class='panel-footer'>" +
   "                  <button class='btn btn-primary add-song'>Add Song</button>" +
-  "                </div>" +
+  "                 </div>" +
   "                  </div>" +
   "                </div>" +
   "                <!-- end of album internal row -->" +
