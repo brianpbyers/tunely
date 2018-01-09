@@ -4,45 +4,19 @@
 var express = require('express');
 // generate a new express app and call it 'app'
 var app = express();
+var bodyParser = require('body-parser');
 
 // serve static files from public folder
 app.use(express.static(__dirname + '/public'));
+
+app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.json());
 
 /************
  * DATABASE *
  ************/
 
-/* hard-coded data */
-var albums = [];
-albums.push({
-              _id: 132,
-              artistName: 'the Old Kanye',
-              name: 'The College Dropout',
-              releaseDate: '2004, February 10',
-              genres: [ 'rap', 'hip hop' ]
-            });
-albums.push({
-              _id: 133,
-              artistName: 'the New Kanye',
-              name: 'The Life of Pablo',
-              releaseDate: '2016, Febraury 14',
-              genres: [ 'hip hop' ]
-            });
-albums.push({
-              _id: 134,
-              artistName: 'the always rude Kanye',
-              name: 'My Beautiful Dark Twisted Fantasy',
-              releaseDate: '2010, November 22',
-              genres: [ 'rap', 'hip hop' ]
-            });
-albums.push({
-              _id: 135,
-              artistName: 'the sweet Kanye',
-              name: '808s & Heartbreak',
-              releaseDate: '2008, November 24',
-              genres: [ 'r&b', 'electropop', 'synthpop' ]
-            });
-
+ var db = require('./models');
 
 
 /**********
@@ -74,8 +48,31 @@ app.get('/api', function api_index (req, res){
 });
 
 app.get('/api/albums', function album_index(req, res){
+  db.Album.find(function(err,albums){
+    res.json(albums);
+  });
 
-})
+});
+
+app.post('/api/albums', function(req, res){
+  console.log('got to the post');
+  console.log(req.body);
+  db.Album.create(req.body,function(err, album){
+    if(err){return console.log('there has been an error', err);}
+    console.log("Created Album:",album);
+    res.json(album);
+  });
+});
+
+app.post('/api/albums/:id/songs', function(req, res){
+  console.log('got to create a song');
+  db.Album.findById(req.params.id, function(err, album){
+    if(err){return console.log('there has been an error:',err);}
+        db.Song.create(req.body);
+  });
+  console.log("we're done with finding Albums");
+  res.json(req.body);
+});
 
 /**********
  * SERVER *

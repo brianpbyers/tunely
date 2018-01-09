@@ -38,13 +38,64 @@ sampleAlbums.push({
 
 
 $(document).ready(function() {
-  console.log('app.js loaded!');
+  getAlbums();
 
+  $('form').submit(function(event){
+    event.preventDefault();
+    var formData = $(this).serialize();
+    $.post('http://localhost:3000/api/albums', formData, function(album){
+      renderAlbum(album);
+    });
+    $(this).trigger('reset');
+  });
+
+  $('#albums').on('click', '.add-song', function(e){
+    var id= $(this).parents('.album').data('album-id');
+    $('#songModal').data('album-id', id).modal();
+
+    $('#saveSong').click(function(event){
+      event.preventDefault();
+      console.log('tried to submit a new song!');
+      let newSong = {
+        name: $('#songName').val(),
+        trackNumber: Number($('#trackNumber').val())
+      };
+      let listRef = "#songListId"+id;
+      $.post('/api/albums/' + $('#songModal').data('album-id') + '/songs', newSong, function(song){
+        console.log('listRef.html:',$(listRef).html());
+        $(listRef).html($(listRef).html() + " (" + song.trackNumber + ") " + song.name + " -");
+      });
+    });
+    console.log('id',id);
+  });
+  console.log('app.js loaded!');
 });
 
+function getAlbums(){
+  let myAlbums = $.get('http://localhost:3000/api/albums',function(albumList){
+    albumList.forEach(function(album){
+      renderAlbum(album);
+    });
+  });
+}
 
 
-
+function buildSongsHTML(songs, albumId){
+  if(!albumId){albumId = "";}
+  let songList = 
+  "  <li class='list-group-item'>" +
+  "   <h4 class='inline-header'>Songs:</h4>" +
+  "     <span id = 'songListId" + albumId + "'> -";
+  if(songs){
+    songs.forEach(function(song){
+      songList += " (" + song.trackNumber + ") " + song.name + " -";
+    });
+   } 
+  songList +=  
+  "     </span>" + 
+  "  </li>";
+  return songList;
+}
 
 // this function takes a single album and renders it to the page
 function renderAlbum(album) {
@@ -52,7 +103,7 @@ function renderAlbum(album) {
 
   var albumHtml =
   "        <!-- one album -->" +
-  "        <div class='row album' data-album-id='" + "HARDCODED ALBUM ID" + "'>" +
+  "        <div class='row album' data-album-id='" + album._id + "'>" +
   "          <div class='col-md-10 col-md-offset-1'>" +
   "              <!-- begin album internal row -->" +
   "                <div class='row'>" +
@@ -63,17 +114,21 @@ function renderAlbum(album) {
   "                    <ul class='list-group'>" +
   "                      <li class='list-group-item'>" +
   "                        <h4 class='inline-header'>Album Name:</h4>" +
-  "                        <span class='album-name'>" + "HARDCODED ALBUM NAME" + "</span>" +
+  "                        <span class='album-name'>" + album.name + "</span>" +
   "                      </li>" +
   "                      <li class='list-group-item'>" +
   "                        <h4 class='inline-header'>Artist Name:</h4>" +
-  "                        <span class='artist-name'>" +  "HARDCODED ARTIST NAME"+ "</span>" +
+  "                        <span class='artist-name'>" +  album.artistName+ "</span>" +
   "                      </li>" +
   "                      <li class='list-group-item'>" +
   "                        <h4 class='inline-header'>Released date:</h4>" +
-  "                        <span class='album-releaseDate'>" + "HARDCODED ALBUM RELEASE" + "</span>" +
+  "                        <span class='album-releaseDate'>" + album.releaseDate + "</span>" +
   "                      </li>" +
+  buildSongsHTML(album.songs, album._id) +
   "                    </ul>" +
+    "                <div class='panel-footer'>" +
+  "                  <button class='btn btn-primary add-song'>Add Song</button>" +
+  "                </div>" +
   "                  </div>" +
   "                </div>" +
   "                <!-- end of album internal row -->" +
@@ -81,5 +136,6 @@ function renderAlbum(album) {
   "          <!-- end one album -->";
 
   // render to the page with jQuery
+  $('#albums').append($(albumHtml));
 
 }
